@@ -1,0 +1,184 @@
+# Shadow Economy Detection & ZKP Community Bond
+### AI-Assisted Immigrant Remittance Propensity Mapping | United States
+
+[![Python](https://img.shields.io/badge/Python-3.12.7-blue)](https://python.org)
+[![XGBoost](https://img.shields.io/badge/XGBoost-2.0.3-orange)](https://xgboost.readthedocs.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green)](LICENSE)
+
+## Overview
+
+This repository contains the complete replication code for the paper:
+
+> Khan, A. H. (2026). *Artificial Intelligence-Assisted Detection of Immigrant
+> Remittance Propensity and a Novel Privacy-Preserving Bond for Domestic Capital
+> Retention in the United States*. Journal of Business & Economic Studies.
+
+The project addresses three research contributions:
+1. An **XGBoost classifier** (ROC-AUC 0.876) that produces household-level
+   remittance propensity scores from IPUMS ACS microdata
+2. The **first PUMA-resolution map** of U.S. remittance outflows ($8.78B nationally)
+3. A **ZKP Community Bond** simulation — a privacy-preserving federal savings
+   instrument that retains $17.5M nationally in Year-1 at 6.7:1 government ROI
+
+---
+
+## Repository Structure
+
+```
+Shadow-Economy-ZKP-Bond/
+|-- data_extraction.ipynb           # Script 1: Data cleaning & feature engineering
+|-- XGBOOST_AI_model.ipynb          # Script 2: XGBoost model + PUMA outputs
+|-- zkp_bond_simulation.ipynb       # Script 3: ZKP bond Monte Carlo simulation
+|-- requirements.txt               # Python package dependencies
+|-- figures/
+|   |-- roc_curve.png              # Figure 1: ROC curve (AUC = 0.876)
+|   |-- feature_importance.png     # Figure 2: XGBoost F-gain importance
+|   |-- zkp_cost_benefit.png       # Figure 4: ZKP simulation results
+|-- data/
+|   |-- PUMA_REMITTANCE_SUMMARY.csv  # Aggregated PUMA-level remittance estimates
+|   |-- ZKP_PUMA_IMPACT.csv          # Aggregated ZKP bond impact by PUMA
+|-- README.md
+```
+
+---
+
+## Data Source
+
+This project uses **IPUMS USA American Community Survey (ACS) 5-year microdata**.
+
+- Source: https://usa.ipums.org/usa/
+- Citation: Ruggles, S., Flood, S., Sobek, M., et al. (2023). IPUMS USA: Version 13.0.
+  Minneapolis, MN: IPUMS. https://doi.org/10.18128/D010.V13.0
+- Access: **Free registration required.** Download is available at no cost.
+- The raw microdata file (`raw_data.csv`) cannot be included in this repository
+  due to IPUMS terms of use. Users must download it directly from IPUMS.
+
+### How to Obtain the Data
+
+1. Register at https://usa.ipums.org/usa/
+2. Create an extract with the following variables:
+   YEAR, SAMPLE, SERIAL, CBSERIAL, CLUSTER, STRATA, GQ, RELATE, RELATED,
+   HHINCOME, INCWAGE, OWNCOST, RENTGRS, VEHICLES, AGE, CITIZEN, YRSUSA1,
+   OCC, BPLD, STATEFIP, PUMA, HHWT, PERNUM, PERWT, COSTELEC, COSTGAS,
+   COSTWATR, BPL
+3. Select sample: 2018 ACS 5-year
+4. Download as CSV and rename to `raw_data.csv`
+5. Place in the same directory as the notebooks
+
+---
+
+## Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/kamirhasan/Shadow-Economy-ZKP-Bond.git
+cd Shadow-Economy-ZKP-Bond
+
+# 2. Install dependencies
+pip install -r requirements.txt
+
+# 3. Place raw_data.csv in the repo root (see Data Source above)
+
+# 4. Run scripts in order:
+#    Step 1: Data extraction
+#    Step 2: XGBoost model
+#    Step 3: ZKP simulation
+# Open each notebook in Jupyter and run all cells sequentially.
+```
+
+---
+
+## Running the Scripts
+
+### Script 1: data_extraction.ipynb
+- **Input:** raw_data.csv (881,743 rows)
+- **Output:** MASTER_Remittance_V7.csv (351,893 records)
+- **Runtime:** ~3 minutes
+- **What it does:** Filters to household heads aged 18+ in standard GQ units,
+  cleans IPUMS N/A codes, computes IS_SHADOW_ACTOR, estimates remittances
+
+### Script 2: XGBOOST_AI_model.ipynb
+- **Input:** MASTER_Remittance_V7.csv
+- **Output:** MASTER_Remittance_V8_PREDICTIONS.csv, PUMA_REMITTANCE_SUMMARY.csv,
+  ZKP_TARGET_HOUSEHOLDS.csv, roc_curve.png, remittance_feature_importance.png
+- **Runtime:** 15–45 minutes (5-fold cross-validation is compute-intensive)
+- **What it does:** Trains XGBoost + isotonic calibration, generates propensity
+  scores, produces PUMA-level summaries
+
+### Script 3: zkp_bond_simulation.ipynb
+- **Input:** ZKP_TARGET_HOUSEHOLDS.csv
+- **Output:** ZKP_BOND_SIMULATION_RESULTS.csv, ZKP_PUMA_IMPACT.csv,
+  zkp_bond_cost_benefit.png
+- **Runtime:** ~5 minutes
+- **What it does:** Simulates ZKP bond adoption using 1,000 Monte Carlo iterations
+
+---
+
+## Key Results
+
+| Metric | Value |
+|--------|-------|
+| Sample size | 351,893 household heads |
+| Origin communities | Mexico, India, Philippines, El Salvador, Bangladesh, Somalia |
+| Model ROC-AUC | 0.876 (test set) / 0.875 ± 0.001 (5-fold CV) |
+| Est. sample remittance | $2.04B/year |
+| Est. national remittance | $8.78B/year |
+| ZKP target households | 24,092 |
+| Year-1 adopters (MC mean) | 2,727 ± 49 |
+| Capital retained (national, Year-1) | $17.5M |
+| Mature program (national, 35%) | $48.7M/year |
+| Government ROI | 6.7:1 |
+
+---
+
+## Interactive Dashboard
+
+A geographic visualization of PUMA-level remittance estimates is available at:
+https://public.tableau.com/app/profile/amir.khan7667/viz/ShadowEconomy-ZKPBond/Dashboard1
+
+---
+
+## Environment
+
+| Package | Version |
+|---------|---------|
+| Python | 3.12.7 (Anaconda) |
+| pandas | 2.2.0 |
+| numpy | 1.26.4 |
+| xgboost | 2.0.3 |
+| scikit-learn | 1.4.0 |
+| matplotlib | 3.8.2 |
+
+---
+
+## Citation
+
+If you use this code or data in your research, please cite:
+
+```bibtex
+@article{khan2026remittance,
+  title   = {Artificial Intelligence-Assisted Detection of Immigrant Remittance
+             Propensity and a Novel Privacy-Preserving Bond for Domestic Capital
+             Retention in the United States},
+  author  = {Khan, Amir Hasan},
+  journal = {Journal of Business \& Economic Studies},
+  year    = {2026},
+  url     = {https://github.com/kamirhasan/Shadow-Economy-ZKP-Bond}
+}
+```
+
+---
+
+## License
+
+Code in this repository is released under the MIT License.
+The IPUMS microdata are subject to IPUMS terms of use (see https://usa.ipums.org/usa/).
+
+---
+
+## Contact
+
+Amir Hasan Khan
+Marketing Analytics & Insights
+Raj Soin College of Business, Wright State University, Dayton, Ohio
+khan.295@wright.edu
